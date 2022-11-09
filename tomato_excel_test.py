@@ -13,7 +13,7 @@ dt_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 workbook = load_workbook(filename = 'testFile.xlsx')
 ws = workbook.worksheets[0]
 
-# Tomatoes (to be updated later after connected to other parts)
+# Tomatoes (to  be updated later after connected to other parts)
 wholeTomatoes = 20 + random.randint(50, 100)
 # slicedTomatoes = 20 + random.randint(50, 100)
 # crushedTomatoes = 20 + random.randint(50, 100)
