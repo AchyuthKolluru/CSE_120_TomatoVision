@@ -36,7 +36,7 @@ import re
 
 
 
-class VehiclesCounting():
+class TomatoCounting():
     def __init__(self, file_counter_log_name, framework='tf', weights='./checkpoints/yolov4-416',
                 size=416, tiny=False, model='yolov4', video='./data/videos/cam0.mp4',
                 output=None, output_format='XVID', iou=0.45, score=0.5,

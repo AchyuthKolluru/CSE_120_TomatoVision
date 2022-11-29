@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from object_tracker import VehiclesCounting
+from object_tracker import TomatoCounting
 import cv2
 
 video = 'data/videos/video2.mp4' # Video's path
