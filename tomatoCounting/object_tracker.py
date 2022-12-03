@@ -152,12 +152,19 @@ class TomatoCounting():
         total_counter = 0
         up_count = 0
         down_count = 0
+        now = datetime.datetime.now()
+        prev_minute = now.time().minute
+        cooldown_length = 2 #number of minutes that needs to pass before the next notification is triggered
+        cooldown = 0
+        thresh = 20 # number of tomatos to trigger the notifcations
 
         class_counter = Counter()  # store counts of each detected class
         already_counted = deque(maxlen=50)  # temporary memory for storing counted IDs
         intersect_info = []  # initialise intersection list
 
         memory = {}
+
+        toggleNotif = False;
 
         while True:
             return_value, frame = vid.read()
@@ -246,6 +253,8 @@ class TomatoCounting():
             if count:
                 cv2.putText(frame, "Objects being tracked: {}".format(count), (5, 35), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (0, 255, 0), 2)
                 print("Objects being tracked: {}".format(count))
+                
+                
             
             # delete detections that are not in allowed_classes
             bboxes = np.delete(bboxes, deleted_indx, axis=0)
@@ -366,10 +375,20 @@ class TomatoCounting():
                             1.5e-3 * frame.shape[0], (0, 255, 255), 2)
                 y += 0.05 * frame.shape[0]
 
-                # calculate current minute
+            # calculate current minute
             now = datetime.datetime.now()
             rounded_now = now - datetime.timedelta(microseconds=now.microsecond)  # round to nearest second
             current_minute = now.time().minute
+            if(current_minute != prev_minute):
+                prev_minute = current_minute
+                if(cooldown > 0):
+                    cooldown = cooldown - 1;
+            
+            # condition for triggering the notification
+            if(count > thresh and cooldown <= 0):
+                toggleNotif = True
+                cooldown = cooldown_length
+                
 
             if current_minute == 0 and len(count_dict) > 1:
                 count_dict = {}  # reset counts every hour
@@ -424,6 +443,10 @@ class TomatoCounting():
                             intersection_file.close()
                             intersect_info = []  # reset list after writing
 
+            #draws the notification last so it overlays everything
+            if toggleNotif:
+                cv2.rectangle(frame,(0,0),(1500,1000),(255,0,0),-1)
+            
             # calculate frames per second of running detections
             fps = 1.0 / (time.time() - start_time)
             print("FPS: %.2f" % fps)
@@ -437,6 +460,11 @@ class TomatoCounting():
             # if output flag is set, save video file
             if self._output:
                 out.write(result)
-
+                    
+            if cv2.waitKey(1) == ord(' '):
+                toggleNotif = False
+            
             if cv2.waitKey(1) & 0xFF == ord('q'): break
+
+
         cv2.destroyAllWindows()
