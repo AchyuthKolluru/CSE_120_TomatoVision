@@ -159,6 +159,7 @@ class TomatoCounting():
         prev_tomato_count = 0;
         minute_tomato_count = 0;
         thresh = 20 # number of tomatos to trigger the notifcations
+        Increment = 0 #This is so that the title of the excel sheet doesn't get printed out mnultiple times
 
         class_counter = Counter()  # store counts of each detected class
         already_counted = deque(maxlen=50)  # temporary memory for storing counted IDs
@@ -381,15 +382,18 @@ class TomatoCounting():
             now = datetime.datetime.now()
             rounded_now = now - datetime.timedelta(microseconds=now.microsecond)  # round to nearest second
             current_minute = now.time().minute
+            thresh_val = 0
             if(current_minute != prev_minute):
                 prev_minute = current_minute
                 minute_tomato_count = total_counter - prev_tomato_count;
                 prev_tomato_count = total_counter
                 if(cooldown > 0):
-                    cooldown = cooldown - 1;
+                    cooldown = cooldown - 1
             
             # condition for triggering the notification
-            if(minute_tomato_count > thresh and cooldown <= 0):
+            if(count > thresh and cooldown <= 0):
+                thresh_val +=1
+                Increment +=1
                 toggleNotif = True
                 cooldown = cooldown_length
                 
@@ -398,54 +402,61 @@ class TomatoCounting():
                 count_dict = {}  # reset counts every hour
             else:
                     # write counts to file for every set interval of the hour
-                    write_interval = 5
-                    if current_minute % write_interval == 0:  # write to file once only every write_interval minutes
-                        if current_minute not in count_dict:
+                    write_interval = 1
+                    if ((current_minute % write_interval == 0) or (thresh_val == 1)):  # write to file once only every write_interval minutes
+                        if current_minute not in count_dict or thresh_val == 1:
                             count_dict[current_minute] = True
-                            total_filename = 'Total counts for {}, {}.txt'.format(current_date, self._file_counter_log_name)
+                            total_filename = 'Total counts for {}, {}.xlsx'.format(current_date, self._file_counter_log_name)
                             counts_folder = './counts/'
                             if not os.access(counts_folder + str(current_date) + '/total', os.W_OK):
                                 os.makedirs(counts_folder + str(current_date) + '/total')
                             total_count_file = open(counts_folder + str(current_date) + '/total/' + total_filename, 'a')
                             print('{} writing...'.format(rounded_now))
+                            print('{} writing...'.format(now))
                             print('Writing current total count ({}) and directional counts to file.'.format(total_counter))
-                            total_count_file.write('{}, {}, {}, {}, {}\n'.format(str(rounded_now), self._file_counter_log_name,
-                                                                                str(total_counter), up_count, down_count))
+                            if (Increment == 1):
+                                total_count_file.write('{}, {}, {}, \n'.format("Shifts", "Total", "Warning"))
+                                Increment +=1
+                            if(thresh_val == 1):
+                                total_count_file.write('{}, {}, {}, \n'.format(str(rounded_now), str(total_counter), str(count)))
+                                thresh_val = 0
+                            if (Increment > 1):
+                                total_count_file.write('{}, {}, {} \n'.format(str(rounded_now), str(total_counter), 0))
                             total_count_file.close()
 
-                            # if class exists in class counter, create file and write counts
+                            # # if class exists in class counter, create file and write counts
 
-                            if not os.access(counts_folder + str(current_date) + '/classes', os.W_OK):
-                                os.makedirs(counts_folder + str(current_date) + '/classes')
-                            for cls in class_counter:
-                                class_count = class_counter[cls]
-                                print('Writing current {} count ({}) to file.'.format(cls, class_count))
-                                class_filename = 'Class counts for {}, {}.txt'.format(current_date, self._file_counter_log_name)
-                                class_count_file = open(counts_folder + str(current_date) + '/classes/' + class_filename, 'a')
-                                class_count_file.write("{}, {}, {}\n".format(rounded_now, self._file_counter_log_name, str(class_count)))
-                                class_count_file.close()
+                            # if not os.access(counts_folder + str(current_date) + '/classes', os.W_OK):
+                            #     os.makedirs(counts_folder + str(current_date) + '/classes')
+                            # for cls in class_counter:
+                            #     class_count = class_counter[cls]
+                            #     print('Writing current {} count ({}) to file.'.format(cls, class_count))
+                            #     class_filename = 'Class counts for {}, {}.txt'.format(current_date, self._file_counter_log_name)
+                            #     class_count_file = open(counts_folder + str(current_date) + '/classes/' + class_filename, 'a')
+                            #     class_count_file.write("{}, {}, {}\n".format(rounded_now, self._file_counter_log_name, str(class_count)))
+                            #     class_count_file.close()
 
-                            # write intersection details
-                            if not os.access(counts_folder + str(current_date) + '/intersections', os.W_OK):
-                                os.makedirs(counts_folder + str(current_date) + '/intersections')
-                            print('Writing intersection details for {}'.format(self._file_counter_log_name))
-                            intersection_filename = 'Intersection details for {}, {}.txt'.format(current_date, self._file_counter_log_name)
-                            intersection_file = open(counts_folder + str(current_date) + '/intersections/' + intersection_filename, 'a')
-                            for i in intersect_info:
-                                cls = i[0]
+                            # # write intersection details
+                            # if not os.access(counts_folder + str(current_date) + '/intersections', os.W_OK):
+                            #     os.makedirs(counts_folder + str(current_date) + '/intersections')
+                            # print('Writing intersection details for {}'.format(self._file_counter_log_name))
+                            # intersection_filename = 'Intersection details for {}, {}.txt'.format(current_date, self._file_counter_log_name)
+                            # intersection_file = open(counts_folder + str(current_date) + '/intersections/' + intersection_filename, 'a')
+                            # for i in intersect_info:
+                            #     cls = i[0]
 
-                                midpoint = i[1]
-                                x = midpoint[0]
-                                y = midpoint[1]
+                            #     midpoint = i[1]
+                            #     x = midpoint[0]
+                            #     y = midpoint[1]
 
-                                angle = i[2]
+                            #     angle = i[2]
 
-                                intersect_time = i[3]
+                            #     intersect_time = i[3]
 
-                                intersection_file.write("{}, {}, {}, {}, {}, {}\n".format(str(intersect_time), self._file_counter_log_name, cls,
-                                                                                        x, y, str(angle)))
-                            intersection_file.close()
-                            intersect_info = []  # reset list after writing
+                            #     intersection_file.write("{}, {}, {}, {}, {}, {}\n".format(str(intersect_time), self._file_counter_log_name, cls,
+                            #                                                             x, y, str(angle)))
+                            # intersection_file.close()
+                            # intersect_info = []  # reset list after writing
 
             #draws the notification last so it overlays everything
             if toggleNotif:
