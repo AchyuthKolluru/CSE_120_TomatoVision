@@ -156,6 +156,8 @@ class TomatoCounting():
         prev_minute = now.time().minute
         cooldown_length = 2 #number of minutes that needs to pass before the next notification is triggered
         cooldown = 0
+        prev_tomato_count = 0;
+        minute_tomato_count = 0;
         thresh = 20 # number of tomatos to trigger the notifcations
 
         class_counter = Counter()  # store counts of each detected class
@@ -381,11 +383,13 @@ class TomatoCounting():
             current_minute = now.time().minute
             if(current_minute != prev_minute):
                 prev_minute = current_minute
+                minute_tomato_count = total_counter - prev_tomato_count;
+                prev_tomato_count = total_counter
                 if(cooldown > 0):
                     cooldown = cooldown - 1;
             
             # condition for triggering the notification
-            if(count > thresh and cooldown <= 0):
+            if(minute_tomato_count > thresh and cooldown <= 0):
                 toggleNotif = True
                 cooldown = cooldown_length
                 
