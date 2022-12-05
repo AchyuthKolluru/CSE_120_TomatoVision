@@ -449,8 +449,11 @@ class TomatoCounting():
 
             #draws the notification last so it overlays everything
             if toggleNotif:
-                cv2.rectangle(frame,(0,0),(1500,1000),(255,0,0),-1)
-            
+                cv2.rectangle(frame,(0,0),(1800,1000),(200,20,20),-1)
+                cv2.putText(frame, "high volume detect", (400, 400), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
+                cv2.putText(frame, "check problem", (400, 500), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
+                cv2.putText(frame, "press space to dismiss", (400, 600), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
+
             # calculate frames per second of running detections
             fps = 1.0 / (time.time() - start_time)
             print("FPS: %.2f" % fps)
