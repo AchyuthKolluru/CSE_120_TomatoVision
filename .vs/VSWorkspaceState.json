@@ -1,7 +1,11 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\PreProcess",
+    "\\PreProcess\\Model",
+    "\\PreProcess\\Model\\training",
+    "\\tomatoCounting"
   ],
-  "SelectedNode": "\\C:\\Users\\Brandon\\Source\\Repos\\CSE_120_TomatoVision",
+  "SelectedNode": "\\tomatoCounting\\object_tracker.py",
   "PreviewInSolutionExplorer": false
 }

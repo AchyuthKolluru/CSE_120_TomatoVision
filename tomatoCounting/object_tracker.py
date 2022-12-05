@@ -156,6 +156,8 @@ class TomatoCounting():
         prev_minute = now.time().minute
         cooldown_length = 2 #number of minutes that needs to pass before the next notification is triggered
         cooldown = 0
+        prev_tomato_count = 0;
+        minute_tomato_count = 0;
         thresh = 20 # number of tomatos to trigger the notifcations
         Increment = 0 #This is so that the title of the excel sheet doesn't get printed out mnultiple times
 
@@ -383,6 +385,8 @@ class TomatoCounting():
             thresh_val = 0
             if(current_minute != prev_minute):
                 prev_minute = current_minute
+                minute_tomato_count = total_counter - prev_tomato_count;
+                prev_tomato_count = total_counter
                 if(cooldown > 0):
                     cooldown = cooldown - 1
             
