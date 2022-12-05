@@ -10,8 +10,10 @@ line_angle = 0
 # initialize
 VC = TomatoCounting(log_filename, video=video, info=False,
                       dont_show=False,
+                      tiny=True,
                       output='./result1.mp4',
-                      detection_line=(line_position, line_angle))
+                      detection_line=(line_position, line_angle),
+                      score=0.4)
 
 # render video
 VC.run()
