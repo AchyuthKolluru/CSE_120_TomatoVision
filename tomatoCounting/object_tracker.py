@@ -38,8 +38,8 @@ import re
 
 class TomatoCounting():
     def __init__(self, file_counter_log_name, framework='tf', weights='./checkpoints/yolov4-416',
-                size=416, tiny=False, model='yolov4', video='./data/videos/cam0.mp4',
-                output=None, output_format='XVID', iou=0.45, score=0.5,
+                size=416, tiny=True, model='yolov4', video='./data/videos/cam0.mp4',
+                output=None, output_format='XVID', iou=0.01, score=0.45,
                 dont_show=False, info=False,
                 detection_line=(0.5,0)):
         '''- cam_name: input your camera name
@@ -156,10 +156,11 @@ class TomatoCounting():
         prev_minute = now.time().minute
         cooldown_length = 2 #number of minutes that needs to pass before the next notification is triggered
         cooldown = 0
-        prev_tomato_count = 0;
-        minute_tomato_count = 0;
-        thresh = 20 # number of tomatos to trigger the notifcations
-        Increment = 0 #This is so that the title of the excel sheet doesn't get printed out mnultiple times
+        prev_tomato_count = 0
+        minute_tomato_count = 0
+        thresh = 12 # number of tomatos to trigger the notifcations
+        Increment = 0 #This is so that the title of the excel sheet doesn't get printed out multiple times
+        safe = 0 #This is incase a notifcation system is not set off after the first minute
 
         class_counter = Counter()  # store counts of each detected class
         already_counted = deque(maxlen=50)  # temporary memory for storing counted IDs
@@ -254,7 +255,7 @@ class TomatoCounting():
             names = np.array(names)
             count = len(names)
             if count:
-                cv2.putText(frame, "Objects being tracked: {}".format(count), (5, 35), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (0, 255, 0), 2)
+                cv2.putText(frame, "Objects being tracked: {}".format(count), (5, 35), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (0, 0, 0), 2)
                 print("Objects being tracked: {}".format(count))
                 
                 
@@ -334,8 +335,8 @@ class TomatoCounting():
 
 
                 cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255,255,255), 2)  # WHITE BOX
-                cv2.putText(frame, "ID: " + str(track.track_id), (int(bbox[0]), int(bbox[1])), 0,
-                                1.5e-3 * frame.shape[0], (0, 0, 255), 2)
+                # cv2.putText(frame, "ID: " + str(track.track_id), (int(bbox[0]), int(bbox[1])), 0,
+                #                 1.5e-3 * frame.shape[0], (0, 0, 255), 2)
 
 
                 if show_detections:
@@ -358,13 +359,13 @@ class TomatoCounting():
                 # Draw total count.
             cv2.putText(frame, "Total: {} ({} up, {} down)".format(str(total_counter), str(up_count),
                         str(down_count)), (int(0.05 * frame.shape[1]), int(0.1 * frame.shape[0])), 0,
-                        1.5e-3 * frame.shape[0], (0, 255, 255), 2)
+                        1.5e-3 * frame.shape[0], (143, 0, 255), 2)
 
             if show_detections:
                 for det in detections:
                     bbox = det.to_tlbr()
                     score = "%.2f" % (det.confidence * 100) + "%"
-                    cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (255, 0, 0), 2)  # BLUE BOX
+                    cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 0), 2)  # BLUE BOX
                     if len(classes) > 0:
                         det_cls = det.cls
                         cv2.putText(frame, str(det_cls) + " " + score, (int(bbox[0]), int(bbox[3])), 0,
@@ -375,7 +376,7 @@ class TomatoCounting():
             for cls in class_counter:
                 class_count = class_counter[cls]
                 cv2.putText(frame, str(cls) + " " + str(class_count), (int(0.05 * frame.shape[1]), int(y)), 0,
-                            1.5e-3 * frame.shape[0], (0, 255, 255), 2)
+                            1.5e-3 * frame.shape[0], (0,0,0), 2)
                 y += 0.05 * frame.shape[0]
 
             # calculate current minute
@@ -404,7 +405,7 @@ class TomatoCounting():
                     # write counts to file for every set interval of the hour
                     write_interval = 1
                     if ((current_minute % write_interval == 0) or (thresh_val == 1)):  # write to file once only every write_interval minutes
-                        if current_minute not in count_dict or thresh_val == 1:
+                        if (current_minute not in count_dict) or (thresh_val == 1):
                             count_dict[current_minute] = True
                             total_filename = 'Total counts for {}, {}.xlsx'.format(current_date, self._file_counter_log_name)
                             counts_folder = './counts/'
@@ -422,6 +423,9 @@ class TomatoCounting():
                                 thresh_val = 0
                             if (Increment > 1):
                                 total_count_file.write('{}, {}, {} \n'.format(str(rounded_now), str(total_counter), 0))
+                            if(safe > 1):
+                                Increment +=1
+                            safe +=1
                             total_count_file.close()
 
                             # # if class exists in class counter, create file and write counts
@@ -461,9 +465,9 @@ class TomatoCounting():
             #draws the notification last so it overlays everything
             if toggleNotif:
                 cv2.rectangle(frame,(0,0),(1800,1000),(200,20,20),-1)
-                cv2.putText(frame, "high volume detect", (400, 400), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
-                cv2.putText(frame, "check problem", (400, 500), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
-                cv2.putText(frame, "press space to dismiss", (400, 600), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
+                cv2.putText(frame, "high volume of tomatoes detected", (400, 400), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
+                cv2.putText(frame, "check for problem", (400, 500), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
+                cv2.putText(frame, "Press SPACE to dismiss", (400, 600), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 255, 255), 2)
 
             # calculate frames per second of running detections
             fps = 1.0 / (time.time() - start_time)
@@ -482,7 +486,8 @@ class TomatoCounting():
             if cv2.waitKey(1) == ord(' '):
                 toggleNotif = False
             
-            if cv2.waitKey(1) & 0xFF == ord('q'): break
+            if cv2.waitKey(1) & 0xFF == ord('q'): 
+                break
 
 
         cv2.destroyAllWindows()

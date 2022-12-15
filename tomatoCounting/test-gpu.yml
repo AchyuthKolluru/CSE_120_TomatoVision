@@ -1,0 +1,20 @@
+name: test
+
+dependencies:
+  - python==3.7
+  - pip
+  - matplotlib
+  - scipy
+  - opencv
+  - cudnn
+  - cudatoolkit
+  - pip:
+    - tensorflow-gpu==2.5.0
+    - opencv-python==4.1.1.26
+    - lxml
+    - tqdm
+    - absl-py
+    - easydict
+    - pillow
+    - pafy==0.5.5
+    - youtube-dl==2021.6.6
